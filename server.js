@@ -1,10 +1,16 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Для корректного __dirname в ES-модулях
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const adapter = new JSONFile('db.json');
 const db = new Low(adapter, { tasks: [] });
@@ -38,6 +44,12 @@ app.delete('/api/tasks/:id', async (req, res) => {
   await db.write();
   res.status(204).end();
 });
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
@@ -54,8 +66,9 @@ async function start() {
   await db.read();
   db.data ||= { tasks: [] };
   await db.write();
+
   app.listen(PORT, () => {
-    console.log(`API запущено на http://localhost:${PORT}`);
+    console.log(`API и фронт запущены на http://localhost:${PORT}`);
   });
 }
 
