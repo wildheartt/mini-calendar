@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://github.com/yourusername/mini-calendar",
+  "homepage": "https://github.com/wildheartt/mini-calendar",
   "scripts": {
     "dev:client": "vite",
     "dev:server": "node server.js",
