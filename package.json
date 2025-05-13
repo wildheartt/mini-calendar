@@ -8,6 +8,8 @@
     "dev:client": "vite",
     "dev:server": "node server.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "start": "node server.js",
     "build": "vite build",
     "lint": "eslint .",
