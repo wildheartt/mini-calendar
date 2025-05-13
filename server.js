@@ -7,28 +7,12 @@ import { JSONFile } from 'lowdb/node';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const adapter = new JSONFile(path.join(__dirname, 'db.json'));
 const db = new Low(adapter, { tasks: [] });
 
-const allowedOrigins = [
-  'https://wildheartt.github.io',
-  'https://mini-calendar-production.up.railway.app',
-];
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
-    },
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type',
-  }),
-);
-app.options('/api/*', cors()); 
+app.use(cors());
 
 app.use(express.json());
 
