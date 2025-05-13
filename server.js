@@ -13,7 +13,6 @@ const adapter = new JSONFile(path.join(__dirname, 'db.json'));
 const db = new Low(adapter, { tasks: [] });
 
 app.use(cors());
-
 app.use(express.json());
 
 app.get('/api/tasks', async (req, res) => {

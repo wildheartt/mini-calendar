@@ -1,6 +1,6 @@
-const API_BASE = import.meta.env.DEV
-  ? '/api'
-  : `${import.meta.env.VITE_API_BASE_URL}/api`;
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
 
 function apiUrl(path, query = '') {
   return `${API_BASE}${path}${query}`;
