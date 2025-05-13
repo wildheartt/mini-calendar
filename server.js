@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -15,7 +14,22 @@ const PORT = process.env.PORT || 3000;
 const adapter = new JSONFile(path.join(__dirname, 'db.json'));
 const db = new Low(adapter, { tasks: [] });
 
-app.use(cors());
+const allowedOrigins = [
+  'https://wildheartt.github.io',
+  'https://mini-calendar-production.up.railway.app',
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error('Not allowed by CORS'));
+    },
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type',
+  }),
+);
+app.options('/api/*', cors()); 
+
 app.use(express.json());
 
 app.get('/api/tasks', async (req, res) => {
