@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -62,13 +63,11 @@ app.get(/^(?!\/api\/).*/, (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-async function start() {
+(async function start() {
   await db.read();
   db.data ||= { tasks: [] };
   await db.write();
-  app.listen(PORT, () => {
-    console.log(`API и фронт запущены на http://localhost:${PORT}`);
-  });
-}
-
-start();
+  app.listen(PORT, () =>
+    console.log(`Server ready →  http://localhost:${PORT}`),
+  );
+})();
