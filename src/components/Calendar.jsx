@@ -1,32 +1,69 @@
-import { useState } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import CalendarHeader from './CalendarHeader';
 import CalendarGrid from './CalendarGrid';
+import TaskModal from './TaskModal';
+
+const getMonthRange = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const from = new Date(year, month, 1);
+  const to = new Date(year, month + 1, 0);
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
+};
 
 const Calendar = () => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1),
   );
+  const [tasks, setTasks] = useState([]);
+  const [modal, setModal] = useState({ open: false, date: null });
 
-  const handlePrevMonth = () => {
+  useEffect(() => {
+    const { from, to } = getMonthRange(currentDate);
+    axios
+      .get(`/api/tasks?from=${from}&to=${to}`)
+      .then((res) =>
+        setTasks(res.data.map((t) => ({ ...t, date: t.date.slice(0, 10) }))),
+      )
+      .catch(() => setTasks([]));
+  }, [currentDate]);
+
+  const handlePrevMonth = () =>
     setCurrentDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
     );
-  };
-  const handleNextMonth = () => {
+  const handleNextMonth = () =>
     setCurrentDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
     );
-  };
-  const handlePrevYear = () => {
+  const handlePrevYear = () =>
     setCurrentDate(
       (prev) => new Date(prev.getFullYear() - 1, prev.getMonth(), 1),
     );
-  };
-  const handleNextYear = () => {
+  const handleNextYear = () =>
     setCurrentDate(
       (prev) => new Date(prev.getFullYear() + 1, prev.getMonth(), 1),
     );
+
+  const addTask = async (date, { title, description }) => {
+    const res = await axios.post('/api/tasks', {
+      date,
+      text: JSON.stringify({ title, description }),
+    });
+    setTasks((prev) => [
+      ...prev,
+      {
+        ...res.data,
+        ...JSON.parse(res.data.text),
+        date: res.data.date.slice(0, 10),
+      },
+    ]);
   };
 
   return (
@@ -38,7 +75,19 @@ const Calendar = () => {
         onPrevYear={handlePrevYear}
         onNextYear={handleNextYear}
       />
-      <CalendarGrid currentDate={currentDate} />
+      <CalendarGrid
+        currentDate={currentDate}
+        tasks={tasks}
+        onDoubleClickDate={(date) => setModal({ open: true, date })}
+      />
+      <TaskModal
+        open={modal.open}
+        onClose={() => setModal({ open: false, date: null })}
+        onSave={async (data) => {
+          await addTask(modal.date, data);
+          setModal({ open: false, date: null });
+        }}
+      />
     </div>
   );
 };
