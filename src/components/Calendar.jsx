@@ -1,9 +1,9 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import CalendarHeader from './CalendarHeader';
 import CalendarGrid from './CalendarGrid';
 import TaskModal from './TaskModal';
+import { getTasks, addTask as addTaskToStorage } from '../utils/localStorage';
 
 const getMonthRange = (date) => {
   const year = date.getFullYear();
@@ -26,12 +26,13 @@ const Calendar = () => {
 
   useEffect(() => {
     const { from, to } = getMonthRange(currentDate);
-    axios
-      .get(`/api/tasks?from=${from}&to=${to}`)
-      .then((res) =>
-        setTasks(res.data.map((t) => ({ ...t, date: t.date.slice(0, 10) }))),
-      )
-      .catch(() => setTasks([]));
+    try {
+      const loadedTasks = getTasks(from, to);
+      setTasks(loadedTasks.map((t) => ({ ...t, date: t.date.slice(0, 10) })));
+    } catch (error) {
+      console.error('Ошибка загрузки задач:', error);
+      setTasks([]);
+    }
   }, [currentDate]);
 
   const handlePrevMonth = () =>
@@ -52,18 +53,18 @@ const Calendar = () => {
     );
 
   const addTask = async (date, { title, description }) => {
-    const res = await axios.post('/api/tasks', {
-      date,
-      text: JSON.stringify({ title, description }),
-    });
-    setTasks((prev) => [
-      ...prev,
-      {
-        ...res.data,
-        ...JSON.parse(res.data.text),
-        date: res.data.date.slice(0, 10),
-      },
-    ]);
+    try {
+      const newTask = addTaskToStorage(date, { title, description });
+      setTasks((prev) => [
+        ...prev,
+        {
+          ...newTask,
+          date: newTask.date.slice(0, 10),
+        },
+      ]);
+    } catch (error) {
+      console.error('Ошибка сохранения задачи:', error);
+    }
   };
 
   return (
