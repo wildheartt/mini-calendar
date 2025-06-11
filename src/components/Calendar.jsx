@@ -1,9 +1,12 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import CalendarHeader from './CalendarHeader';
 import CalendarGrid from './CalendarGrid';
 import TaskModal from './TaskModal';
+import SearchInput from './SearchInput';
+import SearchResults from './SearchResults';
 import { getTasks, addTask as addTaskToStorage } from '../utils/localStorage';
+import { searchTasks } from '../utils/fuzzySearch';
 
 const getMonthRange = (date) => {
   const year = date.getFullYear();
@@ -23,6 +26,7 @@ const Calendar = () => {
   );
   const [tasks, setTasks] = useState([]);
   const [modal, setModal] = useState({ open: false, date: null });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const { from, to } = getMonthRange(currentDate);
@@ -34,6 +38,10 @@ const Calendar = () => {
       setTasks([]);
     }
   }, [currentDate]);
+
+  const filteredTasks = useMemo(() => {
+    return searchTasks(tasks, searchQuery);
+  }, [tasks, searchQuery]);
 
   const handlePrevMonth = () =>
     setCurrentDate(
@@ -67,6 +75,13 @@ const Calendar = () => {
     }
   };
 
+  const handleTaskClick = (task) => {
+    const taskDate = new Date(task.date);
+    setCurrentDate(new Date(taskDate.getFullYear(), taskDate.getMonth(), 1));
+
+    setSearchQuery('');
+  };
+
   return (
     <div>
       <CalendarHeader
@@ -76,9 +91,26 @@ const Calendar = () => {
         onPrevYear={handlePrevYear}
         onNextYear={handleNextYear}
       />
+      <SearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Поиск задач по названию или описанию..."
+      />
+      {searchQuery && (
+        <>
+          <SearchResults
+            tasks={filteredTasks}
+            searchQuery={searchQuery}
+            onTaskClick={handleTaskClick}
+          />
+          <div className="search-stats">
+            Найдено задач: {filteredTasks.length} из {tasks.length}
+          </div>
+        </>
+      )}
       <CalendarGrid
         currentDate={currentDate}
-        tasks={tasks}
+        tasks={searchQuery ? filteredTasks : tasks}
         onDoubleClickDate={(date) => setModal({ open: true, date })}
       />
       <TaskModal
